@@ -12,6 +12,8 @@ multi-turn chat session — all from your terminal.
   instructions.
 - **Interactive chat** — multi-turn REPL with conversation history, slash
   commands, and streaming responses.
+- **Chat file & image input** — `/file` in chat takes multiple files, an inline
+  instruction, Tab completion, and images for vision-capable models.
 - **Model selection** — override the default model per query or per session.
 - **Streaming** — responses stream by default; disable with `--no-stream`.
 - **Usage stats** — optional token usage reported to stderr.
@@ -65,7 +67,7 @@ nebul [query ...] [options]
 | `--no-newline-on-stream` | Do not append a trailing newline after streaming. |
 | `--usage` | Print token usage to stderr (default: on for single queries, off in chat). |
 | `--no-usage` | Do not print token usage. |
-| `--list-models` | List available models and exit. |
+| `-l, --list-models` | List available models and exit. |
 
 ### Environment variables
 
@@ -127,14 +129,14 @@ nebul --chat --system 'You are a code reviewer' -f main.py
 | `/quit` or `/exit` | Exit the chat (also Ctrl+D / Ctrl+C). |
 | `/clear` | Clear conversation history (keeps the system prompt). |
 | `/system <text>` | Set or replace the system prompt. |
-| `/file <path>` | Send a file's contents as your next message. |
+| `/file <path> [more paths] [instruction]` | Send file(s) as your next message, optionally with an instruction. Supports Tab completion, `~`, quoted paths, and image files (PNG/JPG/... for vision models). |
 | `/model [id]` | Show or switch the current model. |
 | `/show` | Print the current conversation. |
 
 ### List available models
 
 ```bash
-nebul --list-models
+nebul -l            # or --list-models
 ```
 
 ### Use a different default model
