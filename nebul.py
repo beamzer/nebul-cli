@@ -8,6 +8,7 @@ import os
 import re
 import shlex
 import sys
+import time
 
 try:
     import readline
@@ -30,6 +31,7 @@ _CHAT_HELP = (
     "                   instruction, e.g. /file ~/a.py \"b file.py\" review these\n"
     "  /model [id]      show or switch the current model\n"
     "  /show            print the current conversation\n"
+    "  /export [path]   save the conversation to a markdown file\n"
 )
 
 
@@ -116,6 +118,19 @@ def describe_content(content) -> str:
     if isinstance(content, str):
         return content
     return "\n".join(p["text"] if p["type"] == "text" else "[image]" for p in content)
+
+
+def export_markdown(messages: list, model: str, path: str) -> str:
+    """Write the conversation to a markdown file; return the path written."""
+    path = os.path.expanduser(path)
+    out = [f"# Nebul conversation\n\n*Model: {model} - exported {time.strftime('%Y-%m-%d %H:%M')}*\n"]
+    titles = {"system": "System", "user": "You", "assistant": "Assistant"}
+    for m in messages:
+        body = describe_content(m["content"]).strip()
+        out.append(f"\n## {titles.get(m['role'], m['role'])}\n\n{body}\n")
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("".join(out))
+    return path
 
 
 def read_prompt(args: argparse.Namespace) -> str:
@@ -244,7 +259,7 @@ def send_turn(client: OpenAI, args: argparse.Namespace, messages: list,
     messages.append({"role": "assistant", "content": content})
 
 
-_CHAT_COMMANDS = ["/help", "/quit", "/exit", "/clear", "/system", "/file", "/model", "/show"]
+_CHAT_COMMANDS = ["/help", "/quit", "/exit", "/clear", "/system", "/file", "/model", "/show", "/export"]
 
 
 def _split_last_token(text: str):
@@ -413,6 +428,16 @@ def run_interactive(args: argparse.Namespace) -> int:
                     model = rest.strip()
                     model_explicit = True
                     sys.stdout.write(f"[model] set to {model}\n")
+            elif cmd == "/export":
+                if not any(m["role"] != "system" for m in messages):
+                    sys.stdout.write("[nothing to export]\n")
+                else:
+                    dest = rest.strip() or time.strftime("nebul-chat-%Y%m%d-%H%M%S.md")
+                    try:
+                        written = export_markdown(messages, model, dest)
+                        sys.stdout.write(f"[exported to {written}]\n")
+                    except OSError as exc:
+                        sys.stdout.write(f"[error] {exc}\n")
             elif cmd == "/show":
                 for m in messages:
                     sys.stdout.write(f"{m['role']}: {describe_content(m['content'])}\n")

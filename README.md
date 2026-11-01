@@ -132,6 +132,7 @@ nebul --chat --system 'You are a code reviewer' -f main.py
 | `/file <path> [more paths] [instruction]` | Send file(s) as your next message, optionally with an instruction. Supports Tab completion, `~`, quoted paths, and image files (PNG/JPG/... for vision models). |
 | `/model [id]` | Show or switch the current model. |
 | `/show` | Print the current conversation. |
+| `/export [path]` | Save the conversation to a markdown file (default `nebul-chat-<timestamp>.md`). |
 
 ### List available models
 
