@@ -68,6 +68,7 @@ nebul [query ...] [options]
 | `--usage` | Print token usage to stderr (default: on for single queries, off in chat). |
 | `--no-usage` | Do not print token usage. |
 | `-l, --list-models` | List available models and exit. |
+| `-V, --version` | Print the version (date of last change, YYYYMMDD) and exit. |
 
 ### Environment variables
 

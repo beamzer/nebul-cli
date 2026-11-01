@@ -20,6 +20,8 @@ from openai import OpenAI
 DEFAULT_BASE_URL = "https://api.inference.nebul.io/v1"
 DEFAULT_MODEL = "openai/gpt-oss-120b"
 
+__version__ = "20261101"  # date of last change (YYYYMMDD)
+
 _CHAT_HELP = (
     "Commands:\n"
     "  /help            show this help\n"
@@ -500,6 +502,7 @@ def build_parser() -> argparse.ArgumentParser:
                         "(default: on for single queries, off in --chat).")
     parser.add_argument("--no-usage", action="store_false", dest="usage",
                         help="Do not print token usage.")
+    parser.add_argument("-V", "--version", action="version", version=f"nebul {__version__}")
     parser.add_argument("-l", "--list-models", action="store_true", help="List available models and exit.")
     return parser
 
