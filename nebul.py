@@ -18,7 +18,7 @@ except ImportError:  # e.g. Windows without pyreadline3
 from openai import OpenAI
 
 DEFAULT_BASE_URL = "https://api.inference.nebul.io/v1"
-DEFAULT_MODEL = "openai/gpt-oss-120b"
+DEFAULT_MODEL = "zai-org/GLM-5.3-Flash"
 
 __version__ = "20261101"  # date of last change (YYYYMMDD)
 

@@ -55,7 +55,7 @@ nebul [query ...] [options]
 | Flag | Description |
 | --- | --- |
 | `query` | Prompt text; multiple words are joined. |
-| `-m, --model MODEL` | Model id (default: `openai/gpt-oss-120b` or `$NEBUL_MODEL`). |
+| `-m, --model MODEL` | Model id (default: `zai-org/GLM-5.3-Flash` or `$NEBUL_MODEL`). |
 | `-s, --system TEXT` | System prompt. |
 | `-p, --prompt TEXT` | Prompt text (alternative to positional). |
 | `-f, --file PATH` | Read `PATH` and use its contents as the prompt. Combine with a query/prompt to prepend instructions. |
