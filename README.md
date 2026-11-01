@@ -68,6 +68,7 @@ nebul [query ...] [options]
 | `--usage` | Print token usage to stderr (default: on for single queries, off in chat). |
 | `--no-usage` | Do not print token usage. |
 | `-l, --list-models` | List available models and exit. |
+| `-w, --web` | Search the web with Firecrawl and answer using the results (needs `FIRECRAWL_API_KEY`). In `--chat`, applies to the first prompt. |
 | `-V, --version` | Print the version (date of last change, YYYYMMDD) and exit. |
 
 ### Environment variables
@@ -77,6 +78,8 @@ nebul [query ...] [options]
 | `NEBUL_API_KEY` | **Required.** Your API key (`sk-...`). |
 | `NEBUL_MODEL` | Default model if `--model` is not given. |
 | `NEBUL_BASE_URL` | Override the API base URL. |
+| `FIRECRAWL_API_KEY` | API key for web retrieval (`--web`, `/web`, `/url`); free key at [firecrawl.dev](https://firecrawl.dev). |
+| `FIRECRAWL_API_URL` | Override the Firecrawl base URL (default: `https://api.firecrawl.dev`). |
 
 ## Examples
 
@@ -133,7 +136,19 @@ nebul --chat --system 'You are a code reviewer' -f main.py
 | `/file <path> [more paths] [instruction]` | Send file(s) as your next message, optionally with an instruction. Supports Tab completion, `~`, quoted paths, and image files (PNG/JPG/... for vision models). |
 | `/model [id]` | Show or switch the current model. |
 | `/show` | Print the current conversation. |
+| `/web <question>` | Search the web (Firecrawl) and answer using the results, with numbered source citations. |
+| `/url <link> [instruction]` | Fetch a web page and send its content as your next message, optionally with an instruction. |
 | `/export [path]` | Save the conversation to a markdown file (default `nebul-chat-<timestamp>.md`). |
+
+### Web retrieval
+
+```bash
+export FIRECRAWL_API_KEY=fc-...
+nebul -w 'What changed in Python 3.13?'     # search the web, answer with citations
+nebul -c                                    # then in chat: /web <question>, /url <link> summarize
+```
+
+Fetched web content is passed to the model as untrusted reference data (each page is truncated to keep prompts small).
 
 ### List available models
 
