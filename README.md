@@ -58,7 +58,7 @@ nebul [query ...] [options]
 | `-m, --model MODEL` | Model id (default: `zai-org/GLM-5.3-Flash` or `$NEBUL_MODEL`). |
 | `-s, --system TEXT` | System prompt. |
 | `-p, --prompt TEXT` | Prompt text (alternative to positional). |
-| `-f, --file PATH` | Read `PATH` and use its contents as the prompt. Combine with a query/prompt to prepend instructions. |
+| `-f, --file PATH` | Read `PATH` and use its contents as the prompt (image files are sent as images; the model must support vision). Combine with a query/prompt to prepend instructions. |
 | `-c, --chat` | Start an interactive multi-turn chat session. |
 | `--temperature N` | Sampling temperature (default: `0.7`). |
 | `--max-tokens N` | Maximum tokens to generate. |

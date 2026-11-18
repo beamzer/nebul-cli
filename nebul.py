@@ -26,7 +26,7 @@ DEFAULT_FIRECRAWL_URL = "https://api.firecrawl.dev"
 WEB_RESULTS = 5          # search results to retrieve
 WEB_CHARS = 4000         # max characters kept per page
 
-__version__ = "20261101"  # date of last change (YYYYMMDD)
+__version__ = "20261118"  # date of last change (YYYYMMDD)
 
 _CHAT_HELP = (
     "Commands:\n"
@@ -64,15 +64,6 @@ def list_models(client: OpenAI) -> None:
         print(mid)
 
 
-def read_file(path: str) -> str:
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return fh.read().rstrip("\n")
-    except OSError as exc:
-        sys.stderr.write(f"error: could not read file {path!r}: {exc}\n")
-        sys.exit(2)
-
-
 def image_data_url(path: str):
     """Return a base64 data URL if path is an image file, else None."""
     mime = mimetypes.guess_type(path)[0]
@@ -100,6 +91,16 @@ def build_file_message(spec: str):
     if not paths:
         first = tokens[0] if tokens else spec
         return None, f"file not found: {first}"
+    return attach_files(paths, " ".join(tokens))
+
+
+def attach_files(paths: list, instruction: str = "", label_single: bool = True):
+    """Build message content from files (text inlined, images as image parts).
+
+    Returns (content, error); content is a string, or a list of content parts
+    when images are attached. A lone text file with an instruction is labelled
+    with its path only if `label_single` is true.
+    """
     blocks, images = [], []
     for path in paths:
         try:
@@ -111,12 +112,12 @@ def build_file_message(spec: str):
                 blocks.append((path, fh.read().rstrip("\n")))
         except (OSError, UnicodeDecodeError) as exc:
             return None, f"could not read {path!r}: {exc}"
-    if len(blocks) == 1 and not tokens and not images:
+    if len(blocks) == 1 and not images and (not instruction or not label_single):
         message = blocks[0][1]
     else:
         message = "\n\n".join(f"--- {p} ---\n{c}" for p, c in blocks)
-    if tokens:
-        message = f"{' '.join(tokens)}\n\n{message}".rstrip()
+    if instruction:
+        message = f"{instruction}\n\n{message}".rstrip()
     if not images:
         return message, None
     parts = [{"type": "text", "text": message}] if message else []
@@ -209,15 +210,23 @@ def build_url_message(spec: str):
     return f"{head}{_WEB_NOTE}\n\n<web_page url=\"{url}\">\n{body}\n</web_page>", None
 
 
-def read_prompt(args: argparse.Namespace) -> str:
+def file_prompt(args: argparse.Namespace):
+    """Content for -f/--file (text or image), with any query/prompt as instruction."""
+    instruction = args.prompt or (" ".join(args.query) if args.query else "")
+    path = os.path.expanduser(args.file)
+    if not os.path.isfile(path):
+        sys.stderr.write(f"error: could not read file {args.file!r}: not found\n")
+        sys.exit(2)
+    content, err = attach_files([path], instruction, label_single=False)
+    if err:
+        sys.stderr.write(f"error: {err}\n")
+        sys.exit(2)
+    return content
+
+
+def read_prompt(args: argparse.Namespace):
     if args.file:
-        file_content = read_file(args.file)
-        instruction = args.prompt
-        if not instruction and args.query:
-            instruction = " ".join(args.query)
-        if instruction:
-            return f"{instruction}\n\n{file_content}"
-        return file_content
+        return file_prompt(args)
     if args.prompt:
         return args.prompt
     if not sys.stdin.isatty():
@@ -300,7 +309,7 @@ def chat(args: argparse.Namespace) -> None:
     if args.system:
         messages.append({"role": "system", "content": args.system})
     prompt = read_prompt(args)
-    if args.web:
+    if args.web and isinstance(prompt, str):
         prompt, err = build_web_message(prompt)
         if err:
             sys.stderr.write(f"error: web search failed: {err}\n")
@@ -443,12 +452,7 @@ def run_interactive(args: argparse.Namespace) -> int:
     # Seed an initial turn if a file, prompt, or piped input was provided.
     initial = None
     if args.file:
-        initial = read_file(args.file)
-        instruction = args.prompt
-        if not instruction and args.query:
-            instruction = " ".join(args.query)
-        if instruction:
-            initial = f"{instruction}\n\n{initial}"
+        initial = file_prompt(args)
     elif args.prompt:
         initial = args.prompt
     elif args.query:
@@ -458,7 +462,7 @@ def run_interactive(args: argparse.Namespace) -> int:
         if data.strip():
             initial = data.rstrip("\n")
 
-    if initial is not None and args.web:
+    if initial is not None and args.web and isinstance(initial, str):
         initial, err = build_web_message(initial)
         if err:
             sys.stdout.write(f"[error] web search failed: {err}\n")
